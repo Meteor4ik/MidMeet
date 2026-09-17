@@ -5,6 +5,7 @@ Meet Navigator — FastAPI-сервер.
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -18,6 +19,20 @@ app = FastAPI(
     version="0.4.0",
 )
 
+
+# ============================================================
+# CORS — разрешаем запросы отовсюду (для APK, WebView, других доменов)
+# ============================================================
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# Подключаем папку static
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
