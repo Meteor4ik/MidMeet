@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+dist/
+nitron.config.json
+platform-tools/
+.coords.txt

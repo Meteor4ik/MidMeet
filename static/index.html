@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Meet Navigator</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
+            font-family: sans-serif;
+        }
+
+        #map {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            z-index: 1;
+        }
+
+        #status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            font-size: 12px;
+            max-width: 60vw;
+        }
+
+        #settings-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        #settings-panel {
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            z-index: 1001;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            width: 280px;
+            max-width: calc(100vw - 20px);
+            box-sizing: border-box;
+        }
+
+        #settings-panel h4 {
+            margin: 0 0 10px 0;
+            font-size: 15px;
+        }
+
+        #settings-panel label {
+            display: block;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 4px;
+        }
+
+        #settings-panel input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        /* ← ГЛАВНОЕ: класс .panel, а не #panel */
+        .panel {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: white;
+            padding: 12px 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+            width: calc(100vw - 20px);
+            max-width: 440px;
+            box-sizing: border-box;
+            max-height: 75vh;
+            max-height: 75dvh;
+            overflow-y: auto;
+        }
+
+        .panel h3 {
+            margin: 0 0 8px 0;
+            font-size: 15px;
+        }
+
+        .btn {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 6px;
+        }
+
+        .btn:active { background: #0056b3; }
+        .btn.secondary { background: #6c757d; }
+        .btn.secondary:active { background: #4a4f54; }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .row input {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            font-family: monospace;
+            min-width: 0;
+        }
+
+        .row button {
+            width: auto;
+            margin-bottom: 0;
+            padding: 8px 14px;
+            font-size: 14px;
+        }
+
+        #room-code {
+            font-family: monospace;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            text-align: center;
+            color: #007AFF;
+            margin: 8px 0;
+            padding: 10px;
+            background: #f0f8ff;
+            border-radius: 8px;
+            user-select: all;
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        #partner-info {
+            font-size: 13px;
+            text-align: center;
+            margin-top: 6px;
+            color: #333;
+        }
+
+        .info-block {
+            font-size: 14px;
+            text-align: center;
+            margin-top: 6px;
+            padding: 6px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .info-block strong {
+            color: #007AFF;
+            font-size: 16px;
+        }
+
+        .info-block.meeting strong {
+            color: #34C759;
+            font-size: 18px;
+        }
+
+        .info-block.time {
+            background: #e8f5e9;
+        }
+
+        .info-block.time strong {
+            color: #2e7d32;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="status">Загрузка...</div>
+    <div id="map"></div>
+
+    <button id="settings-btn" title="Настройки">⚙</button>
+
+    <div id="settings-panel" class="hidden">
+        <h4>Настройки</h4>
+        <label>Ваше имя (видят партнёр)</label>
+        <input type="text" id="input-name" placeholder="Например: Аня" maxlength="20" />
+
+        <label>Свой код встречи (необязательно)</label>
+        <input type="text" id="input-custom-code" placeholder="Например: ANYA2026" maxlength="20" style="text-transform: uppercase;" />
+
+        <div class="hint" style="margin-top: -4px; margin-bottom: 10px;">
+            4–20 символов, только буквы и цифры.<br>
+            Если оставить пустым — код сгенерируется.
+        </div>
+
+        <button class="btn" id="btn-save-name" style="margin-bottom: 0;">Сохранить</button>
+    </div>
+
+    <div id="panel-start" class="panel">
+        <h3>🤝 Встретиться пешком</h3>
+        <button class="btn" id="btn-create">Создать встречу</button>
+        <div class="hint">— или —</div>
+        <div class="row" style="margin-top: 8px;">
+            <input type="text" id="input-code" placeholder="КОД" maxlength="20" />
+            <button class="btn" id="btn-join">Войти</button>
+        </div>
+    </div>
+
+    <div id="panel-host" class="panel hidden">
+        <h3>Ваш код встречи:</h3>
+        <div id="room-code">------</div>
+        <div class="hint">Продиктуйте код другу. Ждём подключения...</div>
+        <div id="partner-info">⏳ Партнёр не подключён</div>
+        <div id="meeting-info" class="info-block meeting hidden">
+            🎯 До точки встречи: <strong id="meeting-value">—</strong>
+        </div>
+        <div id="time-info" class="info-block time hidden">
+            ⏱️ Дойти до встречи: <strong id="time-value">—</strong>
+        </div>
+        <button class="btn secondary" id="btn-leave-host" style="margin-top: 10px;">Выйти</button>
+    </div>
+
+    <div id="panel-guest" class="panel hidden">
+        <h3>Вы подключены ✅</h3>
+        <div id="partner-info-guest">Ожидание позиции партнёра...</div>
+        <div id="meeting-info-guest" class="info-block meeting hidden">
+            🎯 До точки встречи: <strong id="meeting-value-guest">—</strong>
+        </div>
+        <div id="time-info-guest" class="info-block time hidden">
+            ⏱️ Дойти до встречи: <strong id="time-value-guest">—</strong>
+        </div>
+        <button class="btn secondary" id="btn-leave" style="margin-top: 10px;">Выйти</button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html>
