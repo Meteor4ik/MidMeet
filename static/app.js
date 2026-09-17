@@ -2,7 +2,7 @@
 // 0. API BASE
 // ============================================================
 const API_BASE = window.location.protocol === 'file:'
-    ? 'http://192.168.0.244:8000'
+    ? 'https://midmeet.onrender.com'
     : '';
 
 
@@ -26,7 +26,7 @@ let followBtn = null;
 function createFollowButton() {
     const div = document.createElement('div');
     div.id = 'follow-btn';
-    div.innerHTML = '🧭';
+    div.innerHTML = '◎';
     div.title = 'Следовать за мной';
     div.style.cssText = `
         position: fixed;
@@ -34,13 +34,13 @@ function createFollowButton() {
         right: 15px;
         transform: translateY(-50%);
         background: white;
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
+        font-size: 22px;
         cursor: pointer;
         box-shadow: 0 2px 12px rgba(0,0,0,0.35);
         user-select: none;
@@ -68,11 +68,9 @@ function updateFollowButton() {
     if (followMe) {
         followBtn.style.background = '#007AFF';
         followBtn.style.color = 'white';
-        followBtn.title = 'Следование включено';
     } else {
         followBtn.style.background = 'white';
         followBtn.style.color = 'black';
-        followBtn.title = 'Следовать за мной';
     }
 }
 
@@ -394,6 +392,8 @@ async function updateRoutes() {
         timeValueGuest.textContent = formatDuration(myTime);
     }
 
+    updateCompactBlock();
+
     console.log(`✅ До M: ${formatDistance(myDist)}, ${formatDuration(myTime)}`);
 }
 
@@ -476,7 +476,39 @@ function showPanel(name) {
 
 
 // ============================================================
-// 16. СОЗДАНИЕ
+// 16. СВОРАЧИВАНИЕ ПАНЕЛИ + КОМПАКТ-БЛОК
+// ============================================================
+function togglePanel(toggleEl) {
+    const panel = toggleEl.parentElement;
+    panel.classList.toggle('collapsed');
+}
+
+function updateCompactBlock() {
+    let dist = '—';
+    let time = '—';
+
+    if (myRole === 'host') {
+        dist = document.getElementById('meeting-value')?.textContent || '—';
+        time = document.getElementById('time-value')?.textContent || '—';
+    } else if (myRole === 'guest') {
+        dist = document.getElementById('meeting-value-guest')?.textContent || '—';
+        time = document.getElementById('time-value-guest')?.textContent || '—';
+    }
+
+    const distHost = document.getElementById('compact-distance-host');
+    const timeHost = document.getElementById('compact-time-host');
+    const distGuest = document.getElementById('compact-distance-guest');
+    const timeGuest = document.getElementById('compact-time-guest');
+
+    if (distHost) distHost.textContent = `👣 ${dist}`;
+    if (timeHost) timeHost.textContent = `⏱️ ${time}`;
+    if (distGuest) distGuest.textContent = `👣 ${dist}`;
+    if (timeGuest) timeGuest.textContent = `⏱️ ${time}`;
+}
+
+
+// ============================================================
+// 17. СОЗДАНИЕ
 // ============================================================
 async function createMeeting() {
     try {
@@ -506,7 +538,7 @@ async function createMeeting() {
 
 
 // ============================================================
-// 17. ПОДКЛЮЧЕНИЕ
+// 18. ПОДКЛЮЧЕНИЕ
 // ============================================================
 async function joinMeeting() {
     const code = inputCode.value.trim().toUpperCase();
@@ -532,7 +564,7 @@ async function joinMeeting() {
 
 
 // ============================================================
-// 18. ОТПРАВКА ПОЗИЦИИ
+// 19. ОТПРАВКА ПОЗИЦИИ
 // ============================================================
 async function sendMyPosition() {
     if (!roomCode || !myRole || !myPosition) return;
@@ -556,7 +588,7 @@ async function sendMyPosition() {
 
 
 // ============================================================
-// 19. ПОЛУЧЕНИЕ СОСТОЯНИЯ
+// 20. ПОЛУЧЕНИЕ СОСТОЯНИЯ
 // ============================================================
 async function fetchRoomState() {
     if (!roomCode) return;
@@ -572,7 +604,7 @@ async function fetchRoomState() {
 
 
 // ============================================================
-// 20. ПАРТНЁР
+// 21. ПАРТНЁР
 // ============================================================
 function updatePartner(state) {
     const partner = myRole === 'host' ? state.guest : state.host;
@@ -621,15 +653,19 @@ function updatePartner(state) {
             }
         }
         updateRoutes();
+
         if (myRole === 'guest') {
             partnerInfoGuest.textContent = `✅ ${partner.name}`;
         }
+
+        // Форсируем обновление компакт-блока
+        setTimeout(updateCompactBlock, 300);
     }
 }
 
 
 // ============================================================
-// 21. POLLING
+// 22. POLLING
 // ============================================================
 function startPolling() {
     if (pollInterval) clearInterval(pollInterval);
@@ -643,7 +679,7 @@ function startPolling() {
 
 
 // ============================================================
-// 22. ВЫХОД
+// 23. ВЫХОД
 // ============================================================
 async function leaveMeeting() {
     if (roomCode && myRole) {
@@ -681,7 +717,7 @@ async function leaveMeeting() {
 
 
 // ============================================================
-// 23. НАСТРОЙКИ
+// 24. НАСТРОЙКИ
 // ============================================================
 function openSettings() {
     inputName.value = myName;
@@ -718,7 +754,7 @@ function saveName() {
 
 
 // ============================================================
-// 24. DEBUG
+// 25. DEBUG
 // ============================================================
 window.setPos = function(lat, lng) {
     window.debugPositionActive = true;
@@ -740,7 +776,6 @@ window.help = function() {
   setPos(55.7571, 37.6317)    — Китай-город
   setPos(55.7300, 37.6010)    — Парк Горького
   setPos(55.7517, 37.5930)    — Арбат
-  setPos(54.513678, 36.261341) — Калуга
   resetPos()                  — вернуться к GPS
   help()                      — эта справка
     `);
@@ -750,7 +785,7 @@ console.log('💡 Введите help() в консоли, чтобы увиде
 
 
 // ============================================================
-// 25. СОБЫТИЯ
+// 26. СОБЫТИЯ
 // ============================================================
 btnCreate.addEventListener('click', createMeeting);
 btnJoin.addEventListener('click', joinMeeting);
@@ -769,7 +804,7 @@ inputName.addEventListener('keypress', (e) => {
 
 
 // ============================================================
-// 26. СТАРТ
+// 27. СТАРТ
 // ============================================================
 createFollowButton();
 startTracking();
